@@ -16,10 +16,11 @@ $ mkvirtualenv -p python3.8 test-app
 $ poetry install
 
 $ DJANGO_SETTINGS_MODULE=app.settings.base pytest tests/test_db.py
-```
-
-Result:
-
-```
+...
 Error when trying to teardown test databases: OperationalError('database "test_postgres" is being accessed by other users\nDETAIL:  There is 1 other session using the database.\n')
+
+$ DJANGO_SETTINGS_MODULE=app.settings.base pytest tests/test_db_sync.py
+...
+Results (0.26s):
+       2 passed
 ```
