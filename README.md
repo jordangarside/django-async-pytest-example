@@ -12,7 +12,7 @@ Setup and run the test:
 $ pyenv local 3.8.2
 $ pip install virtualenv virtualenvwrapper
 
-$ mkvirtualenv test-app
+$ mkvirtualenv -p python3.8 test-app
 $ poetry install
 
 $ DJANGO_SETTINGS_MODULE=app.settings.base pytest tests/test_db.py
