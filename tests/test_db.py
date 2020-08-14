@@ -1,27 +1,44 @@
 import pytest
-from asgiref.sync import sync_to_async
+from django.db import transaction
+from asgiref.sync import sync_to_async, async_to_sync
 from app.django_models.person.models import Person
+import decorator
 
 
-@sync_to_async
-def create_person() -> Person:
-    return Person.objects.create(name="hello world")
+def async_db_test(func):
+    def inner(func, *args, **kwargs):
+        return async_to_sync(func)(*args, **kwargs)
+
+    return decorator.decorator(inner, func)
 
 
-@sync_to_async
+@pytest.fixture
+async def create_person() -> Person:
+    def inner():
+        return Person.objects.create(name="hello world")
+
+    return sync_to_async(inner, thread_sensitive=True)
+
+
+@pytest.fixture
 def count_persons() -> int:
-    return Person.objects.count()
+    def inner():
+        return Person.objects.count()
+
+    return sync_to_async(inner, thread_sensitive=True)
 
 
-@pytest.mark.asyncio
-@pytest.mark.django_db()
-async def test_db() -> None:
+@pytest.mark.django_db
+@async_db_test
+async def test_db(create_person, count_persons) -> None:
     await create_person()
-    assert await count_persons() == 1
+    await Person.objects.async_create(name="hello there")
+    assert await count_persons() == 2
 
 
-@pytest.mark.asyncio
-@pytest.mark.django_db()
-async def test_db_again() -> None:
+@pytest.mark.django_db
+@async_db_test
+async def test_db_again(create_person, count_persons) -> None:
     await create_person()
-    assert await count_persons() == 1
+    await Person.objects.async_create(name="hello there")
+    assert await count_persons() == 2
